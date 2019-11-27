@@ -1,11 +1,11 @@
 {
-    "name": "nickjbedford/BlockCache",
+    "name": "nickjbedford/block-cache",
     "type": "library",
     "description": "Provides code block level HTML, text and object caching to aggressively cache the generated elements of PHP web pages.",
     "keywords": [
 		"caching", "php", "cache", "performance"
 	],
-    "homepage": "https://github.com/nickjbedford/BlockCache",
+    "homepage": "https://github.com/nickjbedford/block-cache",
     "license": "MIT",
     "authors": [
         {
