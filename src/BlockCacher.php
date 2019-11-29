@@ -46,13 +46,12 @@
 		}
 		
 		/**
-		 * Sets the default block cacher instance.
-		 * @param BlockCacher $cacher The default cacher instance to use.
+		 * Sets this block cacher instance as the default instance.
 		 * @return BlockCacher
 		 */
-		public static function setDefault($cacher)
+		public function setAsDefault()
 		{
-			return self::$default = $cacher;
+			return self::$default = $this;
 		}
 		
 		/**
