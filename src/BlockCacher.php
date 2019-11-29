@@ -37,12 +37,31 @@
 		 * @param boolean $automaticallyEnsureStorageDirectoryExists Set to true to automatically ensure the storage directory exists.
 		 * @throws
 		 */
-		public function __construct($directory = __DIR__, $filePrefix = '', $automaticallyEnsureStorageDirectoryExists = true)
+		public function __construct($directory = __DIR__ . '/cache', $filePrefix = '', $automaticallyEnsureStorageDirectoryExists = true)
 		{
 			$this->directory = rtrim($directory, '/\\') . '/';
 			$this->prefix = $filePrefix;
 			if ($automaticallyEnsureStorageDirectoryExists)
 				$this->ensureStorageDirectoryExists();
+		}
+		
+		/**
+		 * Sets the default block cacher instance.
+		 * @param BlockCacher $cacher The default cacher instance to use.
+		 * @return BlockCacher
+		 */
+		public static function setDefault($cacher)
+		{
+			return self::$default = $cacher;
+		}
+		
+		/**
+		 * Gets the default block cacher instance.
+		 * @return BlockCacher
+		 */
+		public static function default()
+		{
+			return self::$default;
 		}
 		
 		/**
