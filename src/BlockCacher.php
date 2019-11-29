@@ -1,77 +1,5 @@
 <?php
-	
-	/**
-	 * Represents a block cache output buffer entry.
-	 */
-	class BlockCacherOutputBuffer
-	{
-		/** @var string $key */
-		public $key;
-		
-		/** @var string $contents */
-		public $contents;
-		
-		/** @var bool $prefixed */
-		public $prefixed;
-		
-		/** @var bool $hit */
-		public $hit = false;
-		
-		/**
-		 * Initialises a new instance of the output buffer.
-		 * @param string $key The path of the cache file.
-		 * @param bool $prefixed Whether to add the cacher's prefix to this key.
-		 * @param string $contents The contents, if valid, of the cached string.
-		 */
-		public function __construct($key, $prefixed = true, $contents = null)
-		{
-			$this->key = $key;
-			$this->contents = $contents;
-			$this->prefixed = $prefixed;
-			$this->hit = $contents !== null;
-		}
-	}
-	
-	/**
-	 * Represents the results of a block cacher clear procedure.
-	 */
-	class BlockCacherClearResults
-	{
-		/** @var string[] $allFiles */
-		public $allFiles;
-		
-		/** @var string[] $clearedFiles */
-		public $clearedFiles;
-		
-		/**
-		 * Initialises a new instance of the clear results.
-		 * @param string[] $allFiles The list of cache files to be cleared.
-		 * @param string[] $clearedFiles The list of cache files that were successfully cleared.
-		 */
-		public function __construct($allFiles, $clearedFiles)
-		{
-			$this->allFiles = $allFiles;
-			$this->clearedFiles = $clearedFiles;
-		}
-		
-		/**
-		 * Gets the number of cache files successfully cleared.
-		 * @return int
-		 */
-		public function count()
-		{
-			return count($this->clearedFiles);
-		}
-		
-		/**
-		 * Gets the number of cache files to be cleared.
-		 * @return int
-		 */
-		public function total()
-		{
-			return count($this->allFiles);
-		}
-	}
+	namespace BlockCacher;
 	
 	/**
 	 * Represents the file-based data/text block cacher.
@@ -109,12 +37,40 @@
 		 * @param boolean $automaticallyEnsureStorageDirectoryExists Set to true to automatically ensure the storage directory exists.
 		 * @throws
 		 */
-		public function __construct($directory = __DIR__, $filePrefix = '', $automaticallyEnsureStorageDirectoryExists = true)
+		public function __construct($directory = __DIR__ . '/cache', $filePrefix = '', $automaticallyEnsureStorageDirectoryExists = true)
 		{
 			$this->directory = rtrim($directory, '/\\') . '/';
 			$this->prefix = $filePrefix;
 			if ($automaticallyEnsureStorageDirectoryExists)
 				$this->ensureStorageDirectoryExists();
+		}
+		
+		/**
+		 * Sets the default block cacher instance.
+		 * @param BlockCacher $cacher The default cacher instance to use.
+		 * @return BlockCacher
+		 */
+		public static function setDefault($cacher)
+		{
+			return self::$default = $cacher;
+		}
+		
+		/**
+		 * Gets the default block cacher instance.
+		 * @return BlockCacher
+		 */
+		public static function default()
+		{
+			return self::$default;
+		}
+		
+		/**
+		 * Gets the block cache storage directory.
+		 * @return string
+		 */
+		public function directory()
+		{
+			return $this->directory;
 		}
 		
 		/**
@@ -148,17 +104,21 @@
 		/**
 		 * Clears cache files using a specified pattern (defaults to all files) or a specified filename.
 		 * @param string $pattern The glob file search pattern.
+		 * @param bool $prefixed Whether to add the cacher's prefix to the pattern.
 		 * @param bool $isFilename Set to true to treat the pattern parameter as an explicit filename.
 		 * @param bool $includeProtectedPatterns Set to true to include protected cache file patterns in the clear process.
 		 * @return BlockCacherClearResults
 		 */
-		public function clear($pattern = '*', $isFilename = false, $includeProtectedPatterns = false)
+		public function clear($pattern = '*', $prefixed = true, $isFilename = false, $includeProtectedPatterns = false)
 		{
 			if ($isFilename)
 				$files = array($pattern);
 			else
 			{
-				$files = glob($this->directory . $pattern);
+				if ($prefixed)
+					$pattern = "$this->prefix$pattern";
+				$globPattern = $this->directory . $pattern;
+				$files = glob($globPattern);
 				if (!$includeProtectedPatterns && !empty($this->protectedPatterns))
 				{
 					$files = array_filter($files, function($file)
@@ -183,14 +143,14 @@
 		}
 		
 		/**
-		 * Gets a cached value that is still valid. If the cached value does not exist or has expired,
+		 * Gets a cached string that is still valid. If the cached value does not exist or has expired,
 		 * null is returned.
 		 * @param string $key The key for the cached value.
 		 * @param int $lifetime The lifetime for the cached value in seconds. The default is 86,400 (one day).
 		 * @param bool $prefixed Whether to add the cacher's prefix to this key.
 		 * @return mixed|null
 		 */
-		public function get($key, $lifetime = self::DefaultLifetime, $prefixed = true)
+		public function getText($key, $lifetime = self::DefaultLifetime, $prefixed = true)
 		{
 			if (!$this->enabled && !$this->forceCached)
 				return null;
@@ -204,7 +164,22 @@
 			$contents = file_get_contents($filename);
 			@flock($tmp, LOCK_UN);
 			fclose($tmp);
-			return unserialize($contents);
+			return $contents;
+		}
+		
+		
+		/**
+		 * Gets a cached value that is still valid. If the cached value does not exist or has expired,
+		 * null is returned.
+		 * @param string $key The key for the cached value.
+		 * @param int $lifetime The lifetime for the cached value in seconds. The default is 86,400 (one day).
+		 * @param bool $prefixed Whether to add the cacher's prefix to this key.
+		 * @return mixed|null
+		 */
+		public function get($key, $lifetime = self::DefaultLifetime, $prefixed = true)
+		{
+			$value = $this->getText($key, $lifetime, $prefixed);
+			return $value !== null ? unserialize($value) : null;
 		}
 		
 		/**
@@ -268,7 +243,8 @@
 		{
 			if (!$this->enabled && !$this->forceCached)
 				return false;
-			return file_put_contents($this->filepath($key, $prefixed), $value, LOCK_EX) !== false;
+			$filepath = $this->filepath($key, $prefixed);
+			return file_put_contents($filepath, $value, LOCK_EX) !== false;
 		}
 		
 		/**
@@ -280,7 +256,7 @@
 		 */
 		public function start($key, $lifetime = self::DefaultLifetime, $prefixed = true)
 		{
-			$this->buffers[] = $buffer = new BlockCacherOutputBuffer($key, $prefixed, $this->get($key, $lifetime, $prefixed));
+			$this->buffers[] = $buffer = new BlockCacherOutputBuffer($key, $prefixed, $this->getText($key, $lifetime, $prefixed));
 			
 			if (!$buffer->hit)
 				ob_start();

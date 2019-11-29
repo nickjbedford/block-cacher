@@ -15,4 +15,15 @@
             "role": "Developer"
         }
     ],
+    "autoload": {
+        "psr-4": {
+            "BlockCacher\\": "src/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^7"
+    }
 }
