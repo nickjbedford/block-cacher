@@ -53,6 +53,20 @@
 		public function testStartAndEnd()
 		{
 			$cacher = $this->cacher;
+			$value = 'Hello, world!';
+			if ($cacher->start('buffer'))
+				echo $value;
+			$buffer = $cacher->end(false);
+			
+			$this->assertFalse($buffer->hit);
+			$this->assertEquals($value, $buffer->contents);
+			
+			$hit = true;
+			if ($cacher->start('buffer'))
+				$hit = false;
+			$buffer = $cacher->end(false);
+			$this->assertTrue($hit);
+			$this->assertEquals($value, $buffer->contents);
 		}
 		
 		public function testClear()

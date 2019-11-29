@@ -237,7 +237,7 @@
 		 */
 		public function start($key, $lifetime = self::DefaultLifetime, $prefixed = true)
 		{
-			$this->buffers[] = $buffer = new BlockCacherOutputBuffer($key, $prefixed, $this->get($key, $lifetime, $prefixed));
+			$this->buffers[] = $buffer = new BlockCacherOutputBuffer($key, $prefixed, $this->getText($key, $lifetime, $prefixed));
 			
 			if (!$buffer->hit)
 				ob_start();
