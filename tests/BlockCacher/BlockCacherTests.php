@@ -1,13 +1,9 @@
 <?php
 	namespace BlockCacher;
 	
-	/**
-	 * Project: BlockCache
-	 * Created By: nickbedford
-	 * Created: 2019-11-29 1:01 pm
-	 */
+	use PHPUnit\Framework\TestCase;
 	
-	class BlockCacherTests extends \PHPUnit\Framework\TestCase
+	class BlockCacherTests extends TestCase
 	{
 		/** @var BlockCacher $cacher */
 		private $cacher;
@@ -20,13 +16,14 @@
 			$cacheDirectory = __DIR__ . '/cache/';
 			exec("rm -rf \"$cacheDirectory\"");
 			$this->cacher = new BlockCacher($cacheDirectory . bin2hex(random_bytes(8)), self::CachePrefix);
+			$this->cacher->clear();
 		}
 		
 		public function tearDown()
 		{
 			$this->cacher->clear();
 			$cacheDirectory = $this->cacher->directory();
-			exec("rm -rf \"$cacheDirectory\"");
+			rmdir($cacheDirectory);
 			parent::tearDown();
 		}
 		
@@ -80,5 +77,29 @@
 			$this->assertEquals(10, $results->total());
 			$results = $cacher->clear('*');
 			$this->assertEquals(1, $results->count());
+		}
+		
+		public function testGenerate()
+		{
+			$cacher = $this->cacher;
+			$generated = false;
+			$data = $cacher->generate($key = 'generated', function() use(&$generated)
+			{
+				$generated = true;
+				return 'Data';
+			});
+			
+			$this->assertEquals('Data', $data);
+			$this->assertEquals(true, $generated);
+			
+			$generatedTwice = false;
+			$data = $cacher->generate($key = 'generated', function() use(&$generatedTwice)
+			{
+				$generatedTwice = true;
+				return 'Data1';
+			});
+			
+			$this->assertEquals('Data', $data);
+			$this->assertEquals(false, $generatedTwice);
 		}
 	}

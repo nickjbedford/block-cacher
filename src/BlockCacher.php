@@ -3,6 +3,7 @@
 	
 	namespace BlockCacher;
 	
+	use Closure;
 	use Exception;/**
 	 * Represents a file-based data, HTML and text caching mechanism.
 	 * This "block" cacher class provides the ability to generate and
@@ -325,5 +326,24 @@
 			if ($echo)
 				echo $buffer->contents;
 			return $buffer;
+		}
+		
+		/**
+		 * Generates and caches data using a generator function only if the data is not yet cached.
+		 * @param string $key The key for the cached value.
+		 * @param callable|Closure $generator A callback that will generate the data if the cached data does not exist.
+		 * @param int $lifetime The arbitrary lifetime of the cached value (in seconds).
+		 * @param bool $prefixed Whether to add the cacher's prefix to this key.
+		 * @return mixed|null
+		 */
+		public function generate(string $key, $generator, int $lifetime = self::DefaultLifetime, bool $prefixed = true)
+		{
+			if (($data = $this->get($key, $lifetime, $prefixed)) === null)
+			{
+				$data = $generator();
+				if ($data !== null)
+					$this->store($key, $data, $prefixed);
+			}
+			return $data;
 		}
 	}
