@@ -10,7 +10,7 @@
 		
 		const CachePrefix = 'test-';
 		
-		public function setUp()
+		public function setUp(): void
 		{
 			parent::setUp();
 			$cacheDirectory = __DIR__ . '/cache/';
@@ -19,7 +19,7 @@
 			$this->cacher->clear();
 		}
 		
-		public function tearDown()
+		public function tearDown(): void
 		{
 			$this->cacher->clear();
 			$cacheDirectory = $this->cacher->directory();
