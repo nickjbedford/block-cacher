@@ -2,14 +2,14 @@
 	namespace BlockCacher;
 	
 	/**
-	 * Represents the results of a block cacher clear procedure.
+	 * Represents the results of a BlockCacher::clear() procedure.
 	 */
 	class BlockCacherClearResults
 	{
-		/** @var string[] $allFiles */
+		/** @var string[] $allFiles Specifies the list of files determined to be cleared. */
 		public $allFiles;
 		
-		/** @var string[] $clearedFiles */
+		/** @var string[] $clearedFiles Specifies the list of files that were cleared successfully. */
 		public $clearedFiles;
 		
 		/**
@@ -17,7 +17,7 @@
 		 * @param string[] $allFiles The list of cache files to be cleared.
 		 * @param string[] $clearedFiles The list of cache files that were successfully cleared.
 		 */
-		public function __construct($allFiles, $clearedFiles)
+		public function __construct(array $allFiles, array $clearedFiles)
 		{
 			$this->allFiles = $allFiles;
 			$this->clearedFiles = $clearedFiles;
