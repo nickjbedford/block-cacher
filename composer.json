@@ -5,7 +5,7 @@
     "keywords": [
 		"caching", "php", "cache", "performance"
 	],
-    "homepage": "https://github.com/nickjbedford/block-cache",
+    "homepage": "https://github.com/nickjbedford/block-cacher",
     "license": "MIT",
     "authors": [
         {
