@@ -4,7 +4,9 @@
 	namespace BlockCacher;
 	
 	use Closure;
-	use Exception;/**
+	use Exception;
+	
+	/**
 	 * Represents a file-based data, HTML and text caching mechanism.
 	 * This "block" cacher class provides the ability to generate and
 	 * store data efficiently using the file system alone. Reduce load
@@ -45,7 +47,7 @@
 		 * @throws
 		 */
 		public function __construct(
-			string $directory = __DIR__ . '/cache',
+			string $directory,
 			string $filePrefix = '',
 			bool $automaticallyEnsureStorageDirectoryExists = true)
 		{
@@ -57,6 +59,23 @@
 			
 			if (!self::$default)
 				$this->setAsDefault();
+		}
+		
+		/**
+		 * Creates and sets a new block cacher as the default.
+		 * @param string $directory The directory to store all cache files in.
+		 * @param string $filePrefix Optional. The prefix to add to cache filenames (i.e. such localisation, versions).
+		 * @param boolean $automaticallyEnsureStorageDirectoryExists Set to true to automatically ensure the storage directory exists.
+		 * @throws
+		 * @return self
+		 */
+		public static function createDefault(
+			string $directory,
+			string $filePrefix = '',
+			bool $automaticallyEnsureStorageDirectoryExists = true): BlockCacher
+		{
+			return (new self($directory, $filePrefix, $automaticallyEnsureStorageDirectoryExists))
+				->setAsDefault();
 		}
 		
 		/**
@@ -74,7 +93,7 @@
 		 */
 		public static function default(): ?self
 		{
-			return self::$default ?? (self::$default = new self());
+			return self::$default;
 		}
 		
 		/**
@@ -278,8 +297,6 @@
 		 */
 		public function storeText(string $key, $value, bool $prefixed = true)
 		{
-			if (!$this->enabled && !$this->forceCached)
-				return false;
 			$filepath = $this->filepath($key, $prefixed);
 			return file_put_contents($filepath, strval($value), LOCK_EX) !== false;
 		}
