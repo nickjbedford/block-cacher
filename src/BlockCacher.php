@@ -111,7 +111,7 @@
 		 */
 		public function ensureStorageDirectoryExists(): void
 		{
-			if (!file_exists($this->directory) && !mkdir($this->directory, 0755, true))
+			if (!file_exists($this->directory) && !mkdir($this->directory, 0775, true))
 				throw new Exception("The specified block cacher storage directory ($this->directory) could not be created. Please ensure you have the correct permissions to create this directory.");
 		}
 		
