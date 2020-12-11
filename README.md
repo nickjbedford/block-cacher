@@ -25,8 +25,8 @@ be retrieved through the global `blockCacher()` function, or
 The cache directory specified will be created by default if it does not exist. 
 
 ```php
-$cacher = \BlockCacher\BlockCacher::createDefault(__DIR__ . '/cache');
-$sameCacher = \blockCacher();
+$cacher = BlockCacher\BlockCacher::createDefault(__DIR__ . '/cache');
+$sameCacher = blockCacher();
 ```
     
 `BlockCacher` is not a singleton but it does provide a default instance.
@@ -34,7 +34,7 @@ This allows other cache directories to be used in parallel for more
 specific use cases.
 
 ```php
-$otherCacher = new \BlockCacher\BlockCacher(__DIR__ . '/other-cache');
+$otherCacher = new BlockCacher\BlockCacher(__DIR__ . '/other-cache');
 ```
 
 ### Storing & Retrieving Values
@@ -77,7 +77,7 @@ $text = $cacher->getText('textKey', 3600);
 
 `BlockCacher` includes helper methods for generating blocks of HTML
 content and serialisable data. These are `start()` + `end()` as well as
- `generate()`.
+ `generate()` + `html()`.
  
 #### Generating HTML Blocks
 
@@ -124,6 +124,23 @@ $data = $cacher->generate('cached-data.object', function() use($someVar)
     printf("Cache does not exist, generating data...");
     return $data;
 });
+```
+
+#### An Alternative For HTML
+
+You can now use the new `html()` function and pass an output buffer
+generator function. This functions similarly to `generate()` except
+that it should echo its content directly to the current output buffer,
+not return it to the caller.
+
+```php
+$html = $cacher->html('some-block.html', function()
+{
+    ?><p>
+        This is a block of HTML that may take some time to generate.
+    </p><?
+});
+// $html is already echoed to the output buffer
 ```
 
 ### Clearing Caches

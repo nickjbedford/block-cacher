@@ -1,4 +1,6 @@
 <?php
+	/** @noinspection PhpUnhandledExceptionInspection */
+	
 	namespace BlockCacher;
 	
 	use PHPUnit\Framework\TestCase;
@@ -113,6 +115,30 @@
 			});
 			
 			$this->assertEquals('Data', $data);
+			$this->assertEquals(false, $generatedTwice);
+		}
+		
+		public function testGenerateHtml()
+		{
+			$cacher = $this->cacher;
+			$generated = false;
+			$html = $cacher->html($key = 'generated.html', function() use(&$generated)
+			{
+				$generated = true;
+				?>This is some output.<?
+			});
+			
+			$this->assertEquals('This is some output.', $html);
+			$this->assertEquals(true, $generated);
+			
+			$generatedTwice = false;
+			$html = $cacher->html($key = 'generated.html', function() use(&$generatedTwice)
+			{
+				$generatedTwice = true;
+				?>This is some other output.<?
+			});
+			
+			$this->assertEquals('This is some output.', $html);
 			$this->assertEquals(false, $generatedTwice);
 		}
 	}

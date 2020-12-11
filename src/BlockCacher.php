@@ -385,4 +385,23 @@
 			}
 			return $data;
 		}
+		
+		/**
+		 * Generates and caches HTML output using a generator function only if the HTML is not yet cached.
+		 * @param string $key The key for the cached value.
+		 * @param callable|Closure $outputGenerator A callback that will print the HTML to the output buffer.
+		 * if the cached HTML does not exist.
+		 * @param int $lifetime The arbitrary lifetime of the cache (in seconds).
+		 * @param bool $prefixed Whether to add the cacher's prefix to this key.
+		 * @param bool $echo Whether to echo the HTML directly to the output buffer afterwards.
+		 * @return string
+		 * @throws Exception
+		 */
+		public function html(string $key, $outputGenerator, int $lifetime = self::DefaultLifetime, bool $prefixed = true, bool $echo = true): string
+		{
+			if ($this->start($key, $lifetime, $prefixed))
+				$outputGenerator();
+			$buffer = $this->end($echo);
+			return $buffer->contents;
+		}
 	}
