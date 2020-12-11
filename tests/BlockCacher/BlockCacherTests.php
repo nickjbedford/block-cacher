@@ -5,6 +5,8 @@
 	
 	class BlockCacherTests extends TestCase
 	{
+		const RootCacheDirectory = __DIR__ . '/cache/';
+		
 		/** @var BlockCacher $cacher */
 		private $cacher;
 		
@@ -13,9 +15,9 @@
 		public function setUp(): void
 		{
 			parent::setUp();
-			$cacheDirectory = __DIR__ . '/cache/';
-			exec("rm -rf \"$cacheDirectory\"");
-			$this->cacher = new BlockCacher($cacheDirectory . bin2hex(random_bytes(8)), self::CachePrefix);
+			$umask = umask(0);
+			$this->cacher = new BlockCacher(self::RootCacheDirectory . bin2hex(random_bytes(8)), self::CachePrefix);
+			umask($umask);
 			$this->cacher->clear();
 		}
 		
@@ -23,8 +25,19 @@
 		{
 			$this->cacher->clear();
 			$cacheDirectory = $this->cacher->directory();
-			rmdir($cacheDirectory);
+			@rmdir($cacheDirectory);
+			@rmdir(self::RootCacheDirectory);
 			parent::tearDown();
+		}
+		
+		public function testNamedInstances()
+		{
+			$this->assertSame($this->cacher, blockCacher());
+			
+			$cacher = new BlockCacher($this->cacher->directory(), self::CachePrefix);
+			$cacher->register('other');
+			$this->assertSame($cacher, blockCacher('other'));
+			$this->assertNotSame($cacher, blockCacher());
 		}
 		
 		public function testGetAndStoreKey()

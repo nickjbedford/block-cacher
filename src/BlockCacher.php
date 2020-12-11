@@ -21,6 +21,9 @@
 		/** @var BlockCacher $default Specifies the default cacher. */
 		private static $default;
 		
+		/** @var BlockCacher[] $namedCachers Specifies the array of named cachers. */
+		private static $namedCachers = [];
+		
 		/** @var BlockCacherOutputBuffer[] $buffers Stores the stack of currently open buffers. */
 		private $buffers = array();
 		
@@ -94,6 +97,25 @@
 		public static function default(): ?self
 		{
 			return self::$default;
+		}
+		
+		/**
+		 * Registers the cacher under a globally accessible name.
+		 * @param string $name The name of the cacher.
+		 */
+		public function register(string $name): void
+		{
+			self::$namedCachers[$name] = $this;
+		}
+		
+		/**
+		 * Gets the default, or a named, cacher instance.
+		 * @param string|null $cacherName Optional. The name of the cacher.
+		 * @return BlockCacher|null
+		 */
+		public static function instance(?string $cacherName = null): ?BlockCacher
+		{
+			return $cacherName ? (self::$namedCachers[$cacherName] ?? null) : self::default();
 		}
 		
 		/**
