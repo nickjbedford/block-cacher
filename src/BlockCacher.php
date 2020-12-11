@@ -159,7 +159,7 @@
 			
 			$cleared = array();
 			foreach($files as $file)
-				if (unlink($file))
+				if (is_file($file) && unlink($file))
 					$cleared[] = $file;
 
 			return new BlockCacherClearResults($files, $cleared);
