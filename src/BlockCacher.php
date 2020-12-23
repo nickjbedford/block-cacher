@@ -18,6 +18,9 @@
 		/** @var int Specifies the default lifetime for cache files of one day. */
 		const DefaultLifetime = 86400;
 		
+		/** @var int Specifies the default expiry time randomisation in seconds. */
+		const DefaultExpiryTimeRandomisation = 5;
+		
 		/** @var BlockCacher $default Specifies the default cacher. */
 		private static $default;
 		
@@ -42,6 +45,9 @@
 		/** @var string[] $protectedPatterns Specifies the list of file patterns to protect when clearing the cache. */
 		private $protectedPatterns = array();
 		
+		/** @var int $expiryTimeRandomisation Specifies the expiry-time randomisaton in seconds. This dithers the expiry of cache. */
+		private $expiryTimeRandomisation = 0;
+		
 		/**
 		 * Initialises a new instance of the block cacher.
 		 * @param string $directory The directory to store all cache files in.
@@ -62,6 +68,8 @@
 			
 			if (!self::$default)
 				$this->setAsDefault();
+			
+			$this->setExpiryTimeRandomisation(self::DefaultExpiryTimeRandomisation);
 		}
 		
 		/**
@@ -116,6 +124,19 @@
 		public static function instance(?string $cacherName = null): ?BlockCacher
 		{
 			return $cacherName ? (self::$namedCachers[$cacherName] ?? null) : self::default();
+		}
+		
+		/**
+		 * Sets the randomisation of known expiry times to add a "dither" to cache misses.
+		 * This can assist in minimising the synchronous expiry of related caches to reduce
+		 * instantaneous cache generation load.
+		 * @param int $seconds The maximum number of random seconds to add to the known expiry time.
+		 * @return self
+		 */
+		public function setExpiryTimeRandomisation(int $seconds = 0): BlockCacher
+		{
+			$this->expiryTimeRandomisation = max(0, min(getrandmax(), $seconds));
+			return $this;
 		}
 		
 		/**
@@ -279,8 +300,12 @@
 		 */
 		private function isValid(string $filepath, int $lifetime): bool
 		{
-			return file_exists($filepath) &&
-			       filemtime($filepath) > (time() - $lifetime);
+			if (!file_exists($filepath))
+				return false;
+			
+			$cacheTime = filemtime($filepath) - rand(0, $this->expiryTimeRandomisation);
+			$notBefore = time() - $lifetime;
+			return $cacheTime > $notBefore;
 		}
 		
 		/**
@@ -304,7 +329,7 @@
 		 * @param bool $prefixed Whether to add the cacher's prefix to this key.
 		 * @return bool
 		 */
-		public function store(string $key, $value, bool $prefixed = true)
+		public function store(string $key, $value, bool $prefixed = true): bool
 		{
 			return $this->storeText($key, serialize($value), $prefixed);
 		}
@@ -317,7 +342,7 @@
 		 * @param bool $prefixed Whether to add the cacher's prefix to this key.
 		 * @return bool
 		 */
-		public function storeText(string $key, $value, bool $prefixed = true)
+		public function storeText(string $key, $value, bool $prefixed = true): bool
 		{
 			$filepath = $this->filepath($key, $prefixed);
 			return file_put_contents($filepath, strval($value), LOCK_EX) !== false;
