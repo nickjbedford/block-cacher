@@ -345,7 +345,24 @@
 		public function storeText(string $key, $value, bool $prefixed = true): bool
 		{
 			$filepath = $this->filepath($key, $prefixed);
-			return file_put_contents($filepath, strval($value), LOCK_EX) !== false;
+			$exists = file_exists($filepath);
+			if (file_put_contents($filepath, strval($value), LOCK_EX) === false)
+				return false;
+			if (!$exists)
+				self::ensureWritable($filepath);
+			return true;
+		}
+		
+		/**
+		 * Ensure
+		 * @param string $filepath
+		 */
+		private static function ensureWritable(string $filepath): void
+		{
+			$umask = umask();
+			umask(0);
+			@chmod($filepath, 0775);
+			umask($umask);
 		}
 		
 		/**

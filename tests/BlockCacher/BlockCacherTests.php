@@ -141,4 +141,13 @@
 			$this->assertEquals('This is some output.', $html);
 			$this->assertEquals(false, $generatedTwice);
 		}
+		
+		public function testWritablePermissions()
+		{
+			$cacher = $this->cacher;
+			$name = bin2hex(random_bytes(16));
+			$this->assertTrue($cacher->store($name, 'Test data.'));
+			$permissions = fileperms($cacher->filepath($name)) & 0777;
+			$this->assertEquals(0775, $permissions);
+		}
 	}
