@@ -27,7 +27,7 @@
 		 * Gets the number of cache files successfully cleared.
 		 * @return int
 		 */
-		public function count()
+		public function count(): int
 		{
 			return count($this->clearedFiles);
 		}
@@ -36,7 +36,7 @@
 		 * Gets the number of cache files to be cleared.
 		 * @return int
 		 */
-		public function total()
+		public function total(): int
 		{
 			return count($this->allFiles);
 		}
