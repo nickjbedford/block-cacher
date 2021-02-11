@@ -48,18 +48,25 @@
 		/** @var int $expiryTimeRandomisation Specifies the expiry-time randomisaton in seconds. This dithers the expiry of cache. */
 		private $expiryTimeRandomisation = 0;
 		
+		/** @var IFileSystem $fileSystem Specifies the file system interface to use. */
+		private $fileSystem;
+		
 		/**
 		 * Initialises a new instance of the block cacher.
 		 * @param string $directory The directory to store all cache files in.
 		 * @param string $filePrefix Optional. The prefix to add to cache filenames (i.e. such localisation, versions).
 		 * @param boolean $automaticallyEnsureStorageDirectoryExists Set to true to automatically ensure the storage directory exists.
-		 * @throws
+		 * @param IFileSystem|null $fileSystem Optional. Specifies the file system interface to use.
+		 * By default, this is the built-in file system.
+		 * @throws Exception
 		 */
 		public function __construct(
 			string $directory,
 			string $filePrefix = '',
-			bool $automaticallyEnsureStorageDirectoryExists = true)
+			bool $automaticallyEnsureStorageDirectoryExists = true,
+			?IFileSystem $fileSystem = null)
 		{
+			$this->fileSystem = $fileSystem ?? new NativeFileSystem();
 			$this->directory = rtrim($directory, '/\\') . '/';
 			$this->prefix = $filePrefix;
 			
@@ -154,7 +161,8 @@
 		 */
 		public function ensureStorageDirectoryExists(): void
 		{
-			if (!file_exists($this->directory) && !mkdir($this->directory, 0775, true))
+			if (!$this->fileSystem->pathExists($this->directory) &&
+			    !$this->fileSystem->createDirectory($this->directory))
 				throw new Exception("The specified block cacher storage directory ($this->directory) could not be created. Please ensure you have the correct permissions to create this directory.");
 		}
 		
@@ -165,7 +173,7 @@
 		 */
 		public function getCacheFilePaths(string $pattern = '*'): array
 		{
-			return glob($this->directory . $pattern);
+			return $this->fileSystem->searchFiles($this->directory . $pattern);
 		}
 		
 		/**
@@ -191,8 +199,7 @@
 			if ($prefixed)
 				$pattern = "$this->prefix$pattern";
 			
-			/** @var array $files */
-			$files = glob($this->directory . $pattern) ?: [];
+			$files = $this->fileSystem->searchFiles($this->directory . $pattern) ?: [];
 			
 			if (!$clearProtectedFiles && !empty($this->protectedPatterns))
 				$files = $this->filterProtectedFiles($files);
@@ -202,7 +209,8 @@
 			
 			$cleared = array();
 			foreach($files as $file)
-				if (is_file($file) && unlink($file))
+				if ($this->fileSystem->isFile($file) &&
+				    $this->fileSystem->deleteFile($file))
 					$cleared[] = $file;
 
 			return new BlockCacherClearResults($files, $cleared);
@@ -236,9 +244,10 @@
 		private function filterNewerFiles(int $minimumAge, array $files): array
 		{
 			$timestamp = time() - $minimumAge;
-			return array_filter($files, function(string $filename) use($timestamp)
+			$self = $this;
+			return array_filter($files, function(string $filename) use($timestamp, $self)
 			{
-				return filemtime($filename) <= $timestamp;
+				return $self->fileSystem->getModifiedTime($filename) <= $timestamp;
 			});
 		}
 		
@@ -259,12 +268,7 @@
 			if (!$this->isValid($filename, $lifetime))
 				return null;
 			
-			$tmp = fopen($filename, 'r');
-			@flock($tmp, LOCK_SH);
-			$contents = file_get_contents($filename);
-			@flock($tmp, LOCK_UN);
-			fclose($tmp);
-			return $contents;
+			return $this->fileSystem->readFile($filename);
 		}
 		
 		/**
@@ -300,10 +304,11 @@
 		 */
 		private function isValid(string $filepath, int $lifetime): bool
 		{
-			if (!file_exists($filepath))
+			if (!$this->fileSystem->pathExists($filepath))
 				return false;
 			
-			$cacheTime = filemtime($filepath) - rand(0, $this->expiryTimeRandomisation);
+			$timeRandomisation = rand(0, $this->expiryTimeRandomisation);
+			$cacheTime = $this->fileSystem->getModifiedTime($filepath) - $timeRandomisation;
 			$notBefore = time() - $lifetime;
 			return $cacheTime > $notBefore;
 		}
@@ -345,24 +350,7 @@
 		public function storeText(string $key, $value, bool $prefixed = true): bool
 		{
 			$filepath = $this->filepath($key, $prefixed);
-			$exists = file_exists($filepath);
-			if (file_put_contents($filepath, strval($value), LOCK_EX) === false)
-				return false;
-			if (!$exists)
-				self::ensureWritable($filepath);
-			return true;
-		}
-		
-		/**
-		 * Ensure
-		 * @param string $filepath
-		 */
-		private static function ensureWritable(string $filepath): void
-		{
-			$umask = umask();
-			umask(0);
-			@chmod($filepath, 0775);
-			umask($umask);
+			return $this->fileSystem->writeFile($filepath, strval($value));
 		}
 		
 		/**
@@ -429,9 +417,32 @@
 		}
 		
 		/**
+		 * Generates and caches text using a generator function only if the text is not yet cached.
+		 * This can be used in place of the html() function where the contents must be returned, not
+		 * echoed to the output buffer.
+		 * @param string $key The key for the cached value.
+		 * @param callable|Closure $generator A callback that will return the text if the cached
+		 * text does not exist.
+		 * @param int $lifetime The arbitrary lifetime of the cache (in seconds).
+		 * @param bool $prefixed Whether to add the cacher's prefix to this key.
+		 * @return string
+		 * @throws Exception
+		 */
+		public function generateText(string $key, $generator, int $lifetime = self::DefaultLifetime, bool $prefixed = true): string
+		{
+			if (($text = $this->getText($key, $lifetime, $prefixed)) === null)
+			{
+				$text = $generator();
+				if ($text !== null)
+					$this->storeText($key, $text, $prefixed);
+			}
+			return $text;
+		}
+		
+		/**
 		 * Generates and caches HTML output using a generator function only if the HTML is not yet cached.
 		 * @param string $key The key for the cached value.
-		 * @param callable|Closure $outputGenerator A callback that will print the HTML to the output buffer.
+		 * @param callable|Closure $outputGenerator A callback that will print the HTML to the output buffer
 		 * if the cached HTML does not exist.
 		 * @param int $lifetime The arbitrary lifetime of the cache (in seconds).
 		 * @param bool $prefixed Whether to add the cacher's prefix to this key.
@@ -442,7 +453,9 @@
 		public function html(string $key, $outputGenerator, int $lifetime = self::DefaultLifetime, bool $prefixed = true, bool $echo = true): string
 		{
 			if ($this->start($key, $lifetime, $prefixed))
+			{
 				$outputGenerator();
+			}
 			$buffer = $this->end($echo);
 			return $buffer->contents;
 		}

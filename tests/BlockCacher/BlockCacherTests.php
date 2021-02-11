@@ -17,9 +17,7 @@
 		public function setUp(): void
 		{
 			parent::setUp();
-			$umask = umask(0);
 			$this->cacher = new BlockCacher(self::RootCacheDirectory . bin2hex(random_bytes(8)), self::CachePrefix);
-			umask($umask);
 			$this->cacher->clear();
 		}
 		
@@ -90,7 +88,7 @@
 			$results = $cacher->clear('key-*');
 			$this->assertEquals(10, $results->count());
 			$this->assertEquals(10, $results->total());
-			$results = $cacher->clear('*');
+			$results = $cacher->clear();
 			$this->assertEquals(1, $results->count());
 		}
 		
@@ -101,20 +99,44 @@
 			$data = $cacher->generate($key = 'generated', function() use(&$generated)
 			{
 				$generated = true;
-				return 'Data';
+				return [ 'Data' ];
 			});
 			
-			$this->assertEquals('Data', $data);
+			$this->assertEquals('Data', $data[0]);
 			$this->assertEquals(true, $generated);
 			
 			$generatedTwice = false;
 			$data = $cacher->generate($key = 'generated', function() use(&$generatedTwice)
 			{
 				$generatedTwice = true;
-				return 'Data1';
+				return [ 'New Data' ];
 			});
 			
-			$this->assertEquals('Data', $data);
+			$this->assertEquals('Data', $data[0]);
+			$this->assertEquals(false, $generatedTwice);
+		}
+		
+		public function testGenerateText()
+		{
+			$cacher = $this->cacher;
+			$generated = false;
+			$text = $cacher->generateText($key = 'generated', function() use(&$generated)
+			{
+				$generated = true;
+				return 'Some text';
+			});
+			
+			$this->assertEquals('Some text', $text);
+			$this->assertEquals(true, $generated);
+			
+			$generatedTwice = false;
+			$text = $cacher->generateText($key = 'generated', function() use(&$generatedTwice)
+			{
+				$generatedTwice = true;
+				return 'New text';
+			});
+			
+			$this->assertEquals('Some text', $text);
 			$this->assertEquals(false, $generatedTwice);
 		}
 		
@@ -142,12 +164,16 @@
 			$this->assertEquals(false, $generatedTwice);
 		}
 		
-		public function testWritablePermissions()
+		public function testNativeFileSystemWritablePermissions()
 		{
 			$cacher = $this->cacher;
 			$name = bin2hex(random_bytes(16));
 			$this->assertTrue($cacher->store($name, 'Test data.'));
-			$permissions = fileperms($cacher->filepath($name)) & 0777;
-			$this->assertEquals(0775, $permissions);
+			
+			$filePermissions = fileperms($cacher->filepath($name)) & 0777;
+			$directoryPermissions = fileperms($cacher->directory()) & 0777;
+			
+			$this->assertEquals(NativeFileSystem::FilePermissions, $filePermissions);
+			$this->assertEquals(NativeFileSystem::DirectoryPermissions, $directoryPermissions);
 		}
 	}
