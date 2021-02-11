@@ -450,7 +450,7 @@
 		 * @return string
 		 * @throws Exception
 		 */
-		public function html(string $key, $outputGenerator, int $lifetime = self::DefaultLifetime, bool $prefixed = true, bool $echo = true): string
+		public function html(string $key, $outputGenerator, int $lifetime = self::DefaultLifetime, bool $prefixed = true, bool $echo = false): string
 		{
 			if ($this->start($key, $lifetime, $prefixed))
 			{

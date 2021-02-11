@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="All Tests" type="PHPUnitRunConfigurationType" factoryName="PHPUnit">
+    <CommandLine>
+      <PhpTestInterpreterSettings>
+        <option name="interpreterName" value="Current PHP" />
+      </PhpTestInterpreterSettings>
+    </CommandLine>
+    <TestRunner class="BlockCacher\BlockCacherTests" file="$PROJECT_DIR$/tests/BlockCacher/BlockCacherTests.php" scope="Class" />
+    <method v="2" />
+  </configuration>
+</component>

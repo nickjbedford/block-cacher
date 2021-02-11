@@ -10,7 +10,9 @@ It provides straight-forward key-based storage and retrieval as
 well as start/end output buffer caching as well as lazy data generation.
 
 Keys are directly used as filenames on disk, allowing key-based cache
-clearing using wildcards.
+clearing using wildcards. The file system is now abstracted through the
+`BlockCacher\IFileSystem` interface so it can be replaced with other
+file-systems.
 
 ## Usage
 
@@ -22,16 +24,17 @@ The first instance of BlockCacher will become the default and can then
 be retrieved through the global `blockCacher()` function, or
 `BlockCacher::getDetault()`.
 
-The cache directory specified will be created by default if it does not exist. 
+The cache directory specified will be created by default if it does not
+exist, although this can be prevented in the constructor parameters.
 
 ```php
 $cacher = BlockCacher\BlockCacher::createDefault(__DIR__ . '/cache');
 $sameCacher = blockCacher();
 ```
     
-`BlockCacher` is not a singleton but it does provide a default instance.
-This allows other cache directories to be used in parallel for more
-specific use cases.
+`BlockCacher` is not a singleton but it does provide a default instance
+capability. This allows other cache directories to be used in parallel
+for more specific use cases.
 
 ```php
 $otherCacher = new BlockCacher\BlockCacher(__DIR__ . '/other-cache');
@@ -73,7 +76,7 @@ $text = $cacher->getText('textKey', 3600);
 // $text = "This text is stored directly without serialisation."
 ```
 
-### Generating Blocks of HTML & Data
+### Generating Blocks of HTML, Text & Data
 
 `BlockCacher` includes helper methods for generating blocks of HTML
 content and serialisable data. These are `start()` + `end()` as well as
@@ -126,12 +129,26 @@ $data = $cacher->generate('cached-data.object', function() use($someVar)
 });
 ```
 
+#### Lazily Generating Text (or HTML)
+
+To generate cacheable text only if necessary, use the `generateText()`
+method, which takes a closure that will generate the text to be
+cached if it does not already exist.
+
+```php
+$text = $cacher->generateText('cached-data.txt', function()
+{    
+    printf("Cache does not exist, generating data...");
+    return 'Some text content...';
+});
+```
+
 #### An Alternative For HTML
 
 You can now use the new `html()` function and pass an output buffer
 generator function. This functions similarly to `generate()` except
-that it should echo its content directly to the current output buffer,
-not return it to the caller.
+that the generator function should echo its content directly to the
+output buffer, not return it to the cacher method.
 
 ```php
 $html = $cacher->html('some-block.html', function()
@@ -140,8 +157,9 @@ $html = $cacher->html('some-block.html', function()
         This is a block of HTML that may take some time to generate.
     </p><?
 });
-// $html is already echoed to the output buffer
 ```
+
+The HTML content can then be echoed to the higher level output buffer.
 
 ### Clearing Caches
 
@@ -169,4 +187,30 @@ the minimum age of files that can be cleared.
 // clear all cache files older than 30 days
 $minimumAge = 86400 * 30;
 $cacher->clear('*', true, false, $minimumAge);
+```
+
+## File System Interface
+
+Version 0.4 introduces the new `BlockCacher\IFileSystem` interface. By default,
+the `BlockCacher\NativeFileSystem` implementation is used, which wraps the existing
+native IO functions that were used by `BlockCacher`.
+
+To use a different file system, implement the `IFileSystem` interface then
+pass in an instance of your class to the `BlockCacher` constructor.
+
+```php
+class CustomFileSystem implements BlockCacher\IFileSystem
+{
+    function pathExists(string $path) : bool { }
+    function isFile(string $path) : bool { }
+    function createDirectory(string $path) : bool { }
+    function readFile(string $path) : ?string { }
+    function writeFile(string $path,string $contents) : bool{ }
+    function deleteFile(string $path) : bool { }
+    function getModifiedTime(string $path) : int { }
+    function searchFiles(string $globPattern) : array { }
+}
+
+$fileSystem = new CustomFileSystem();
+$cacher = new \BlockCacher\BlockCacher('cache', '', true, $fileSystem);
 ```

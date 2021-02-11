@@ -144,12 +144,16 @@
 		{
 			$cacher = $this->cacher;
 			$generated = false;
+			
+			ob_start();
 			$html = $cacher->html($key = 'generated.html', function() use(&$generated)
 			{
 				$generated = true;
 				?>This is some output.<?
 			});
+			$outerBuffer = ob_get_clean();
 			
+			$this->assertEquals('', $outerBuffer);
 			$this->assertEquals('This is some output.', $html);
 			$this->assertEquals(true, $generated);
 			
