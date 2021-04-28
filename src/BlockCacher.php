@@ -257,9 +257,9 @@
 		 * @param string $key The key for the cached value.
 		 * @param int $lifetime The lifetime for the cached value in seconds. The default is 86,400 (one day).
 		 * @param bool $prefixed Whether to add the cacher's prefix to this key.
-		 * @return mixed|null
+		 * @return string|null
 		 */
-		public function getText(string $key, int $lifetime = self::DefaultLifetime, bool $prefixed = true)
+		public function getText(string $key, int $lifetime = self::DefaultLifetime, bool $prefixed = true): ?string
 		{
 			if (!$this->enabled && !$this->forceCached)
 				return null;
@@ -322,8 +322,7 @@
 		 */
 		public function exists(string $key, int $lifetime = self::DefaultLifetime, bool $prefixed = true): bool
 		{
-			return ($this->enabled || $this->forceCached) ?
-				$this->isValid($this->filepath($key, $prefixed), $lifetime) : false;
+			return (($this->enabled || $this->forceCached)) && $this->isValid($this->filepath($key, $prefixed), $lifetime);
 		}
 		
 		/**
@@ -458,5 +457,38 @@
 			}
 			$buffer = $this->end($echo);
 			return $buffer->contents;
+		}
+		
+		/**
+		 * Creates a cache block for an item-style naming convention.
+		 * @param string $itemType The name of the item being cache.
+		 * @param string $itemId The ID of the item being cached.
+		 * @param string $blockType The type of block being cached for the item.
+		 * @param int|null $version The version of the cached data being generated.
+		 * @param string $extension The file extension for the cached data.
+		 * @param string $separator The separator used to join the components of the name.
+		 * @return Block
+		 */
+		public function itemBlock(
+			string $itemType,
+			string $itemId,
+			string $blockType = '',
+			?int $version = 1,
+			string $extension = '.cache',
+			string $separator = '-'): Block
+		{
+			return (new Block($this))->namedForItem($itemType, $itemId, $blockType, $version, $extension, $separator);
+		}
+		
+		/**
+		 * Sets the cache block name from an array of parts joined by a separator.
+		 * @param array $nameParts
+		 * @param string $separator
+		 * @param string $extension
+		 * @return Block
+		 */
+		public function block(array $nameParts, string $separator = '-', string $extension = '.cache'): Block
+		{
+			return (new Block($this))->namedFromParts($nameParts, $separator, $extension);
 		}
 	}
