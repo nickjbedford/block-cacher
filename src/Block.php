@@ -120,7 +120,7 @@
 		 * @param callable|Closure $generator A callback that will generate the data if the cached data does not exist.
 		 * @return mixed|null
 		 */
-		public function generate($generator): bool
+		public function generate($generator)
 		{
 			return $this->cacher->generate($this->name, $generator, $this->lifetime);
 		}
@@ -132,7 +132,7 @@
 		 * @return mixed|null
 		 * @throws Exception
 		 */
-		public function generateText($generator): bool
+		public function generateText($generator): string
 		{
 			return $this->cacher->generateText($this->name, $generator, $this->lifetime);
 		}
