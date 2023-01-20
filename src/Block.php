@@ -198,16 +198,17 @@
 		 */
 		public function start(): bool
 		{
-			return $this->start();
+			return $this->cacher->start($this->name, $this->lifetime);
 		}
 		
 		/**
 		 * Stores the output buffer into the cache file and optionally echoes the content.
 		 * @param bool $echo Set to true to echo the contents of the buffer automatically.
 		 * @return BlockCacherOutputBuffer
+		 * @throws Exception
 		 */
 		public function end(bool $echo = true): BlockCacherOutputBuffer
 		{
-			return $this->end($echo);
+			return $this->cacher->end($echo);
 		}
 	}
