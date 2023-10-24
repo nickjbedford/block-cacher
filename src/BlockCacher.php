@@ -21,35 +21,38 @@
 		/** @var int Specifies the default expiry time randomisation in seconds. */
 		const DefaultExpiryTimeRandomisation = 5;
 		
-		/** @var BlockCacher $default Specifies the default cacher. */
-		private static $default;
+		/** @var BlockCacher|null $default Specifies the default cacher. */
+		private static ?BlockCacher $default = null;
 		
 		/** @var BlockCacher[] $namedCachers Specifies the array of named cachers. */
-		private static $namedCachers = [];
+		private static array $namedCachers = [];
 		
 		/** @var BlockCacherOutputBuffer[] $buffers Stores the stack of currently open buffers. */
-		private $buffers = array();
+		private array $buffers = [];
 		
 		/** @var string $directory Specifies the directory where cache files will be stored. */
-		private $directory;
+		private string $directory;
 		
 		/** @var string $prefix Specifies the text to prefix to all filenames. */
-		private $prefix;
+		private string $prefix;
 		
 		/** @var bool $forceCached Specifies whether to force caching regardless of whether the cacher is enabled. */
-		private $forceCached = false;
+		private bool $forceCached = false;
 		
 		/** @var bool $enabled Specifies whether the cacher will actually use cached data or not. */
-		private $enabled = true;
+		private bool $enabled = true;
 		
 		/** @var string[] $protectedPatterns Specifies the list of file patterns to protect when clearing the cache. */
-		private $protectedPatterns = array();
+		private array $protectedPatterns = [];
 		
 		/** @var int $expiryTimeRandomisation Specifies the expiry-time randomisaton in seconds. This dithers the expiry of cache. */
-		private $expiryTimeRandomisation = 0;
+		private int $expiryTimeRandomisation = 0;
 		
 		/** @var IFileSystem $fileSystem Specifies the file system interface to use. */
-		private $fileSystem;
+		private IFileSystem $fileSystem;
+		
+		/** @var bool $allowClearing Specifies whether to allow clearing using the clear() function. Otherwise, clear() will do nothing. */
+		private bool $allowClearing = true;
 		
 		/**
 		 * Initialises a new instance of the block cacher.
@@ -181,9 +184,20 @@
 		 * follows the rules of glob file pattern matching.
 		 * @param string $pattern
 		 */
-		public function protectFilePattern(string $pattern)
+		public function protectFilePattern(string $pattern): void
 		{
 			$this->protectedPatterns[] = $pattern;
+		}
+		
+		/**
+		 * Sets whether to allow use of the clear() function, or otherwise skip calls and return
+		 * empty clearing results gracefully.
+		 * @param bool $allowClearing
+		 * @return void
+		 */
+		public function allowClearing(bool $allowClearing = true): void
+		{
+			$this->allowClearing = $allowClearing;
 		}
 		
 		/**
@@ -194,8 +208,11 @@
 		 * @param int $minimumAge Only files older than this many seconds are cleared.
 		 * @return BlockCacherClearResults The results of the clearing process.
 		 */
-		public function clear($pattern = '*', $prefixed = true, $clearProtectedFiles = false, int $minimumAge = 0): BlockCacherClearResults
+		public function clear(string $pattern = '*', bool $prefixed = true, bool $clearProtectedFiles = false, int $minimumAge = 0): BlockCacherClearResults
 		{
+			if (!$this->allowClearing)
+				return new BlockCacherClearResults([], []);
+			
 			if ($prefixed)
 				$pattern = "$this->prefix$pattern";
 			
@@ -279,7 +296,7 @@
 		 * @param bool $prefixed Whether to add the cacher's prefix to this key.
 		 * @return mixed|null
 		 */
-		public function get(string $key, int $lifetime = self::DefaultLifetime, bool $prefixed = true)
+		public function get(string $key, int $lifetime = self::DefaultLifetime, bool $prefixed = true): mixed
 		{
 			$value = $this->getText($key, $lifetime, $prefixed);
 			return $value !== null ? unserialize($value) : null;
@@ -333,7 +350,7 @@
 		 * @param bool $prefixed Whether to add the cacher's prefix to this key.
 		 * @return bool
 		 */
-		public function store(string $key, $value, bool $prefixed = true): bool
+		public function store(string $key, mixed $value, bool $prefixed = true): bool
 		{
 			return $this->storeText($key, serialize($value), $prefixed);
 		}
@@ -346,7 +363,7 @@
 		 * @param bool $prefixed Whether to add the cacher's prefix to this key.
 		 * @return bool
 		 */
-		public function storeText(string $key, $value, bool $prefixed = true): bool
+		public function storeText(string $key, mixed $value, bool $prefixed = true): bool
 		{
 			$filepath = $this->filepath($key, $prefixed);
 			return $this->fileSystem->writeFile($filepath, strval($value));
@@ -404,7 +421,7 @@
 		 * @param bool $prefixed Whether to add the cacher's prefix to this key.
 		 * @return mixed|null
 		 */
-		public function generate(string $key, $generator, int $lifetime = self::DefaultLifetime, bool $prefixed = true)
+		public function generate(string $key, callable|Closure $generator, int $lifetime = self::DefaultLifetime, bool $prefixed = true): mixed
 		{
 			if (($data = $this->get($key, $lifetime, $prefixed)) === null)
 			{
@@ -427,7 +444,7 @@
 		 * @return string
 		 * @throws Exception
 		 */
-		public function generateText(string $key, $generator, int $lifetime = self::DefaultLifetime, bool $prefixed = true): string
+		public function generateText(string $key, callable|Closure $generator, int $lifetime = self::DefaultLifetime, bool $prefixed = true): string
 		{
 			if (($text = $this->getText($key, $lifetime, $prefixed)) === null)
 			{
@@ -449,7 +466,7 @@
 		 * @return string
 		 * @throws Exception
 		 */
-		public function html(string $key, $outputGenerator, int $lifetime = self::DefaultLifetime, bool $prefixed = true, bool $echo = false): string
+		public function html(string $key, callable|Closure $outputGenerator, int $lifetime = self::DefaultLifetime, bool $prefixed = true, bool $echo = false): string
 		{
 			if ($this->start($key, $lifetime, $prefixed))
 			{

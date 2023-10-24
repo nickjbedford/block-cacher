@@ -9,7 +9,7 @@
 	{
 		const DirectoryPermissions = 0775;
 		const FilePermissions = 0664;
-		private $applyFullPermissions;
+		private bool $applyFullPermissions;
 		
 		/**
 		 * NativeFileSystem constructor.
@@ -88,11 +88,14 @@
 			{
 				if (!$exists)
 				{
-					if ($this->applyFullPermissions) {
+					if ($this->applyFullPermissions)
+					{
 						$umask = umask();
 						umask(0);
 					}
+					
 					@chmod($path, self::FilePermissions);
+					
 					if ($this->applyFullPermissions)
 						umask($umask);
 				}

@@ -14,18 +14,13 @@
 		{
 			const RootCacheDirectory = __DIR__ . '/cache/';
 			
-			/** @var BlockCacher[] $cachers */
-			private $cachers;
-			
-			/** @var BlockCacher $native */
-			private $native;
-			
-			/** @var BlockCacher $mock */
-			private $mock;
+			private array $cachers;
+			private BlockCacher $native;
+			private BlockCacher $mock;
 			
 			const CachePrefix = 'test-';
 			
-			public function cacherProvider(): array
+			public static function cacherProvider(): array
 			{
 				return [ [ 0 ], [ 1 ] ];
 			}
@@ -151,24 +146,24 @@
 			{
 				$cacher = $this->cachers[$i];
 				$generated = false;
-				$data = $cacher->generate($key = 'generated', function() use(&$generated)
+				$data = $cacher->generate('generated', function() use(&$generated)
 				{
 					$generated = true;
 					return [ 'Data' ];
 				});
 				
 				$this->assertEquals('Data', $data[0]);
-				$this->assertEquals(true, $generated);
+				$this->assertTrue($generated);
 				
 				$generatedTwice = false;
-				$data = $cacher->generate($key = 'generated', function() use(&$generatedTwice)
+				$data = $cacher->generate('generated', function() use(&$generatedTwice)
 				{
 					$generatedTwice = true;
 					return [ 'New Data' ];
 				});
 				
 				$this->assertEquals('Data', $data[0]);
-				$this->assertEquals(false, $generatedTwice);
+				$this->assertFalse($generatedTwice);
 			}
 			
 			/**
@@ -180,24 +175,24 @@
 			{
 				$cacher = $this->cachers[$i];
 				$generated = false;
-				$text = $cacher->generateText($key = 'generated', function() use(&$generated)
+				$text = $cacher->generateText('generated', function() use(&$generated)
 				{
 					$generated = true;
 					return 'Some text';
 				});
 				
 				$this->assertEquals('Some text', $text);
-				$this->assertEquals(true, $generated);
+				$this->assertTrue($generated);
 				
 				$generatedTwice = false;
-				$text = $cacher->generateText($key = 'generated', function() use(&$generatedTwice)
+				$text = $cacher->generateText('generated', function() use(&$generatedTwice)
 				{
 					$generatedTwice = true;
 					return 'New text';
 				});
 				
 				$this->assertEquals('Some text', $text);
-				$this->assertEquals(false, $generatedTwice);
+				$this->assertFalse($generatedTwice);
 			}
 			
 			/**
@@ -211,7 +206,7 @@
 				$generated = false;
 				
 				ob_start();
-				$html = $cacher->html($key = 'generated.html', function() use(&$generated)
+				$html = $cacher->html('generated.html', function() use(&$generated)
 				{
 					$generated = true;
 					?>This is some output.<?
@@ -220,17 +215,17 @@
 				
 				$this->assertEquals('', $outerBuffer);
 				$this->assertEquals('This is some output.', $html);
-				$this->assertEquals(true, $generated);
+				$this->assertTrue($generated);
 				
 				$generatedTwice = false;
-				$html = $cacher->html($key = 'generated.html', function() use(&$generatedTwice)
+				$html = $cacher->html('generated.html', function() use(&$generatedTwice)
 				{
 					$generatedTwice = true;
 					?>This is some other output.<?
 				});
 				
 				$this->assertEquals('This is some output.', $html);
-				$this->assertEquals(false, $generatedTwice);
+				$this->assertFalse($generatedTwice);
 			}
 			
 			/**

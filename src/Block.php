@@ -3,22 +3,18 @@
 	
 	namespace BlockCacher;
 	
+	use Closure;
 	use Exception;
 	
 	/**
-	 * Represents a cache block (file caching context)
-	 * with a name and a cacher to use in storing and retrieving content.
+	 * Represents a cache block (file caching context) with a name and
+	 * a cacher to use in storing and retrieving content.
 	 */
 	class Block
 	{
-		/** @var BlockCacher $cacher */
-		private $cacher;
-		
-		/** @var string $name */
-		private $name;
-		
-		/** @var int $lifetime */
-		private $lifetime;
+		private BlockCacher $cacher;
+		private string $name;
+		private int $lifetime;
 		
 		public function __construct(
 			BlockCacher $cacher,
@@ -32,7 +28,6 @@
 		
 		/**
 		 * Gets the block cacher.
-		 * @return BlockCacher
 		 */
 		public function getCacher(): BlockCacher
 		{
@@ -41,7 +36,6 @@
 		
 		/**
 		 * Gets the name of the cache block.
-		 * @return string
 		 */
 		public function getName(): string
 		{
@@ -50,7 +44,6 @@
 		
 		/**
 		 * Gets the lifetime of the cache.
-		 * @return int
 		 */
 		public function getLifetime(): int
 		{
@@ -59,8 +52,7 @@
 		
 		/**
 		 * Sets the lifetime for the cache block.
-		 * @param int $lifetime
-		 * @return self
+		 * @param int $lifetime The lifetime of the cache in seconds.
 		 */
 		public function lifetime(int $lifetime = BlockCacher::DefaultLifetime): self
 		{
@@ -108,7 +100,6 @@
 		
 		/**
 		 * Determines whether the cached block exists.
-		 * @return bool
 		 */
 		public function exists(): bool
 		{
@@ -118,9 +109,9 @@
 		/**
 		 * Generates and caches data using a generator function only if the data is not yet cached.
 		 * @param callable|Closure $generator A callback that will generate the data if the cached data does not exist.
-		 * @return mixed|null
+		 * @return mixed|null The generated data.
 		 */
-		public function generate($generator)
+		public function generate(callable|Closure $generator): mixed
 		{
 			return $this->cacher->generate($this->name, $generator, $this->lifetime);
 		}
@@ -129,10 +120,10 @@
 		 * Generates and caches text using a generator function only if the data is not yet cached.
 		 * @param callable|Closure $generator A callback that will return the text if the cached
 		 * text does not exist.
-		 * @return mixed|null
+		 * @return string
 		 * @throws Exception
 		 */
-		public function generateText($generator): string
+		public function generateText(callable|Closure $generator): string
 		{
 			return $this->cacher->generateText($this->name, $generator, $this->lifetime);
 		}
@@ -145,7 +136,7 @@
 		 * @return string
 		 * @throws Exception
 		 */
-		public function html($outputGenerator, bool $echo = false): string
+		public function html(callable|Closure $outputGenerator, bool $echo = false): string
 		{
 			return $this->cacher->html($this->name, $outputGenerator, $this->lifetime, true, $echo);
 		}
@@ -155,7 +146,7 @@
 		 * null is returned.
 		 * @return mixed|null
 		 */
-		public function get()
+		public function get(): mixed
 		{
 			return $this->cacher->get($this->name, $this->lifetime);
 		}
@@ -176,7 +167,7 @@
 		 * @param mixed $value
 		 * @return bool
 		 */
-		public function store($value): bool
+		public function store(mixed $value): bool
 		{
 			return $this->cacher->store($this->name, $value);
 		}
@@ -187,7 +178,7 @@
 		 * @param mixed $value
 		 * @return bool
 		 */
-		public function storeText($value): bool
+		public function storeText(mixed $value): bool
 		{
 			return $this->cacher->storeText($this->name, $value);
 		}

@@ -8,7 +8,7 @@
 		class MockFileSystem implements IFileSystem
 		{
 			/** @var MockFile[] $files */
-			private $files = [];
+			private array $files = [];
 			
 			/**
 			 * @inheritDoc

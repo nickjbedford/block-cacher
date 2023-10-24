@@ -6,17 +6,17 @@
 	 */
 	class BlockCacherOutputBuffer
 	{
-		/** @var string $key */
-		public $key;
+		/** @var string $key The name of the cache file. */
+		public string $key;
 		
-		/** @var string $contents */
-		public $contents;
+		/** @var string|null $contents The contents of the block cacher output buffer, or null. */
+		public ?string $contents;
 		
-		/** @var bool $prefixed */
-		public $prefixed;
+		/** @var bool $prefixed Whether to add the cacher's prefix to this key. */
+		public bool $prefixed;
 		
-		/** @var bool $hit */
-		public $hit = false;
+		/** @var bool $hit Whether the cache was hit (contents is not null). */
+		public bool $hit = false;
 		
 		/**
 		 * Initialises a new instance of the output buffer.

@@ -7,10 +7,10 @@
 	class BlockCacherClearResults
 	{
 		/** @var string[] $allFiles Specifies the list of files determined to be cleared. */
-		public $allFiles;
+		public array $allFiles;
 		
 		/** @var string[] $clearedFiles Specifies the list of files that were cleared successfully. */
-		public $clearedFiles;
+		public array $clearedFiles;
 		
 		/**
 		 * Initialises a new instance of the clear results.

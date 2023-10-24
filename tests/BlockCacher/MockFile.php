@@ -3,8 +3,8 @@
 	
 	class MockFile
 	{
-		public $contents;
-		public $modified;
+		public string $contents;
+		public int $modified;
 		
 		public function __construct(string $contents)
 		{
