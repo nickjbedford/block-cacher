@@ -85,7 +85,7 @@
 		 */
 		public function readFile(string $path): ?string
 		{
-			if (($tmp = fopen($path, 'r')) === false)
+			if (($tmp = @fopen($path, 'r')) === false)
 				return null;
 			
 			$locked = @flock($tmp, LOCK_SH);
