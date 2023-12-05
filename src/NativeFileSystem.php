@@ -11,6 +11,12 @@
 		const FilePermissions = 0664;
 		private bool $applyFullPermissions;
 		
+		/** @var int $writeRetryCount Specifies the number of write attempts that will be taken on the file (in the case of file locking issues). */
+		public int $writeRetryCount = 3;
+		
+		/** @var int $writeRetryDelay Specifies the number of milliseconds to wait between write attempts (in the case of file locking issues). */
+		public int $writeRetryDelay = 50;
+		
 		/**
 		 * NativeFileSystem constructor.
 		 * @param bool $applyFullPermissions If this is true, the umask will be
@@ -43,16 +49,26 @@
 		 */
 		public function createDirectory(string $path): bool
 		{
-			if ($this->applyFullPermissions)
+			$tries = $this->writeRetryCount;
+			while ($tries--)
 			{
-				$umask = umask();
-				umask(0);
+				if ($this->applyFullPermissions)
+				{
+					$umask = umask();
+					umask(0);
+				}
+				
+				$result = @mkdir($path, self::DirectoryPermissions, true);
+				
+				if ($this->applyFullPermissions)
+					umask($umask);
+				
+				if ($result)
+					break;
+				
+				usleep($this->writeRetryDelay * 1000);
 			}
 			
-			$result = mkdir($path, self::DirectoryPermissions, true);
-			
-			if ($this->applyFullPermissions)
-				umask($umask);
 			return $result;
 		}
 		
@@ -69,10 +85,16 @@
 		 */
 		public function readFile(string $path): ?string
 		{
-			$tmp = fopen($path, 'r');
-			@flock($tmp, LOCK_SH);
-			$contents = file_get_contents($path);
-			@flock($tmp, LOCK_UN);
+			if (($tmp = fopen($path, 'r')) === false)
+				return null;
+			
+			$locked = @flock($tmp, LOCK_SH);
+			
+			$contents = @file_get_contents($path);
+			
+			if ($locked)
+				@flock($tmp, LOCK_UN);
+			
 			fclose($tmp);
 			return $contents !== false ? $contents : null;
 		}
@@ -83,23 +105,29 @@
 		 */
 		public function writeFile(string $path, string $contents): bool
 		{
-			$exists = file_exists($path);
-			if (file_put_contents($path, $contents, LOCK_EX) !== false)
+			$tries = $this->writeRetryCount;
+			while ($tries--)
 			{
-				if (!$exists)
+				$exists = file_exists($path);
+				if (file_put_contents($path, $contents, LOCK_EX) !== false)
 				{
-					if ($this->applyFullPermissions)
+					if (!$exists)
 					{
-						$umask = umask();
-						umask(0);
+						if ($this->applyFullPermissions)
+						{
+							$umask = umask();
+							umask(0);
+						}
+						
+						@chmod($path, self::FilePermissions);
+						
+						if ($this->applyFullPermissions)
+							umask($umask);
 					}
-					
-					@chmod($path, self::FilePermissions);
-					
-					if ($this->applyFullPermissions)
-						umask($umask);
+					return true;
 				}
-				return true;
+				
+				usleep($this->writeRetryDelay * 1000);
 			}
 			return false;
 		}
