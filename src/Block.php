@@ -202,4 +202,13 @@
 		{
 			return $this->cacher->end($echo);
 		}
+		
+		/**
+		 * Clears the cache block and returns true if cached data was cleared.
+		 * @return bool
+		 */
+		public function clear(): bool
+		{
+			return $this->cacher->clear($this->name)->count() > 0;
+		}
 	}
