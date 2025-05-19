@@ -325,6 +325,17 @@
 		}
 		
 		/**
+		 * Gets the age of a cache key in seconds, or the current time() value if the cache key does not exist.
+		 * @param string $key The name for the cached value.
+		 * @param bool $prefixed Whether to add the cacher's prefix to this key.
+		 * @return int The age of the cache key in seconds, or the current time() value if the cache key does not exist.
+		 */
+		public function getAge(string $key, bool $prefixed = true): int
+		{
+			return time() - $this->getModifiedTime($key, $prefixed);
+		}
+		
+		/**
 		 * Determines if a cache file exists and is valid.
 		 * @param string $filepath The full path of the file.
 		 * @param int $lifetime The lifetime in seconds.
