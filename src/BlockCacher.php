@@ -314,6 +314,17 @@
 		}
 		
 		/**
+		 * Gets the modified time of a cache key, or zero if the cache key does not exist.
+		 * @param string $key The name for the cached value.
+		 * @param bool $prefixed Whether to add the cacher's prefix to this key.
+		 * @return int A Unix timestamp of the last modified time of the file, or zero.
+		 */
+		public function getModifiedTime(string $key, bool $prefixed = true): int
+		{
+			return $this->fileSystem->getModifiedTime($this->filepath($key, $prefixed));
+		}
+		
+		/**
 		 * Determines if a cache file exists and is valid.
 		 * @param string $filepath The full path of the file.
 		 * @param int $lifetime The lifetime in seconds.

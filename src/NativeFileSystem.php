@@ -137,7 +137,9 @@
 		 */
 		public function getModifiedTime(string $path): int
 		{
-			return filemtime($path);
+			if (!file_exists($path))
+				return 0;
+			return filemtime($path) ?: 0;
 		}
 		
 		/**
