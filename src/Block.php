@@ -7,6 +7,7 @@
 	use Exception;
 	
 	/**
+	 * @template TData = mixed
 	 * Represents a cache block (file caching context) with a name and
 	 * a cacher to use in storing and retrieving content.
 	 */
@@ -27,7 +28,7 @@
 		}
 		
 		/**
-		 * Gets the block cacher.
+		 * Gets the BlockCacher responsible for caching for this block.
 		 */
 		public function getCacher(): BlockCacher
 		{
@@ -71,13 +72,12 @@
 		 * @param string $separator The separator used to join the components of the name.
 		 * @return self
 		 */
-		public function namedForItem(
-			string $itemType,
-			string $itemId,
-			string $blockType = '',
-			?int $version = 1,
-			string $extension = '.cache',
-			string $separator = '-'): self
+		public function namedForItem(string $itemType,
+		                             string $itemId,
+		                             string $blockType = '',
+		                             ?int $version = 1,
+		                             string $extension = '.cache',
+		                             string $separator = '-'): self
 		{
 			return $this->namedFromParts(array_filter([ $itemType, $itemId, $blockType, $version ? "V$version" : null ], function(string $part)
 			{
@@ -99,7 +99,7 @@
 		}
 		
 		/**
-		 * Determines whether the cached block exists.
+		 * Determines whether the cached data exists and is valid.
 		 */
 		public function exists(): bool
 		{
@@ -109,7 +109,7 @@
 		/**
 		 * Generates and caches data using a generator function only if the data is not yet cached.
 		 * @param callable|Closure $generator A callback that will generate the data if the cached data does not exist.
-		 * @return mixed|null The generated data.
+		 * @return TData|null The generated data.
 		 */
 		public function generate(callable|Closure $generator): mixed
 		{
@@ -120,10 +120,9 @@
 		 * Generates and caches text using a generator function only if the data is not yet cached.
 		 * @param callable|Closure $generator A callback that will return the text if the cached
 		 * text does not exist.
-		 * @return string
-		 * @throws Exception
+		 * @return string|null
 		 */
-		public function generateText(callable|Closure $generator): string
+		public function generateText(callable|Closure $generator): ?string
 		{
 			return $this->cacher->generateText($this->name, $generator, $this->lifetime);
 		}
@@ -144,7 +143,7 @@
 		/**
 		 * Gets a cached value that is still valid. If the cached value does not exist or has expired,
 		 * null is returned.
-		 * @return mixed|null
+		 * @return TData|null
 		 */
 		public function get(): mixed
 		{
@@ -164,7 +163,7 @@
 		/**
 		 * Stores a value in the file cache. The value must be serializable
 		 * using the native serialize() function.
-		 * @param mixed $value
+		 * @param TData $value
 		 * @return bool
 		 */
 		public function store(mixed $value): bool
@@ -175,7 +174,7 @@
 		/**
 		 * Stores a string value in the file cache. This does not serialize the value
 		 * but will coerce its type to string.
-		 * @param mixed $value
+		 * @param TData|string $value
 		 * @return bool
 		 */
 		public function storeText(mixed $value): bool

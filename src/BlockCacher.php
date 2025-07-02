@@ -449,7 +449,9 @@
 			{
 				$data = $generator();
 				if ($data !== null)
+				{
 					$this->store($key, $data, $prefixed);
+				}
 			}
 			return $data;
 		}
@@ -463,16 +465,17 @@
 		 * text does not exist.
 		 * @param int $lifetime The arbitrary lifetime of the cache (in seconds).
 		 * @param bool $prefixed Whether to add the cacher's prefix to this key.
-		 * @return string
-		 * @throws Exception
+		 * @return string|null
 		 */
-		public function generateText(string $key, callable|Closure $generator, int $lifetime = self::DefaultLifetime, bool $prefixed = true): string
+		public function generateText(string $key, callable|Closure $generator, int $lifetime = self::DefaultLifetime, bool $prefixed = true): ?string
 		{
 			if (($text = $this->getText($key, $lifetime, $prefixed)) === null)
 			{
 				$text = $generator();
 				if ($text !== null)
+				{
 					$this->storeText($key, $text, $prefixed);
+				}
 			}
 			return $text;
 		}
@@ -494,8 +497,7 @@
 			{
 				$outputGenerator();
 			}
-			$buffer = $this->end($echo);
-			return $buffer->contents;
+			return $this->end($echo)->contents;
 		}
 		
 		/**
@@ -521,9 +523,9 @@
 		
 		/**
 		 * Sets the cache block name from an array of parts joined by a separator.
-		 * @param array $nameParts
-		 * @param string $separator
-		 * @param string $extension
+		 * @param array $nameParts The parts of the name to join using the separator.
+		 * @param string $separator The separator to use when joining the name parts.
+		 * @param string $extension The file extension for the cached data.
 		 * @return Block
 		 */
 		public function block(array $nameParts, string $separator = '-', string $extension = '.cache'): Block
