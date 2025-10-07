@@ -147,6 +147,6 @@
 		 */
 		public function searchFiles(string $globPattern): array
 		{
-			return glob($globPattern);
+			return glob($globPattern, GLOB_NOSORT);
 		}
 	}
