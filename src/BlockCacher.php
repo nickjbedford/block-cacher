@@ -94,7 +94,7 @@
 			string $filePrefix = '',
 			bool $automaticallyEnsureStorageDirectoryExists = true): BlockCacher
 		{
-			return (new self($directory, $filePrefix, $automaticallyEnsureStorageDirectoryExists))
+			return new self($directory, $filePrefix, $automaticallyEnsureStorageDirectoryExists)
 				->setAsDefault();
 		}
 		
@@ -250,12 +250,8 @@
 			return array_filter($files, function ($file)
 			{
 				$filename = pathinfo($file, PATHINFO_BASENAME);
-				foreach ($this->protectedPatterns as $pattern)
-				{
-					if (fnmatch($pattern, $filename))
-						return false;
-				}
-				return true;
+				return array_all($this->protectedPatterns,
+					fn($pattern) => !fnmatch($pattern, $filename));
 			});
 		}
 		
@@ -525,7 +521,7 @@
 			string $extension = '.cache',
 			string $separator = '-'): Block
 		{
-			return (new Block($this))->namedForItem($itemType, $itemId, $blockType, $version, $extension, $separator);
+			return new Block($this)->namedForItem($itemType, $itemId, $blockType, $version, $extension, $separator);
 		}
 		
 		/**
@@ -537,6 +533,6 @@
 		 */
 		public function block(array $nameParts, string $separator = '-', string $extension = '.cache'): Block
 		{
-			return (new Block($this))->namedFromParts($nameParts, $separator, $extension);
+			return new Block($this)->namedFromParts($nameParts, $separator, $extension);
 		}
 	}

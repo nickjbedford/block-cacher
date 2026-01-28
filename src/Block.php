@@ -4,6 +4,7 @@
 	namespace BlockCacher;
 	
 	use Closure;
+	use Deprecated;
 	use Exception;
 	
 	/**
@@ -13,10 +14,27 @@
 	 */
 	class Block
 	{
-		private BlockCacher $cacher;
-		private string $name;
-		private int $lifetime;
+		private BlockCacher $cacher
+		{
+			get => $this->cacher;
+		}
 		
+		private string $name
+		{
+			get => $this->name;
+		}
+		
+		private int $lifetime
+		{
+			get => $this->lifetime;
+		}
+		
+		/**
+		 * Initializes a new caching block.
+		 * @param BlockCacher $cacher The cacher to use for this block.
+		 * @param string $name The name of the cache block.
+		 * @param int $lifetime The lifetime of the cache in seconds.
+		 */
 		public function __construct(
 			BlockCacher $cacher,
 			string $name = 'Block.cache',
@@ -28,27 +46,12 @@
 		}
 		
 		/**
-		 * Gets the BlockCacher responsible for caching for this block.
-		 */
-		public function getCacher(): BlockCacher
-		{
-			return $this->cacher;
-		}
-		
-		/**
 		 * Gets the name of the cache block.
 		 */
+		#[Deprecated('replace with property access')]
 		public function getName(): string
 		{
 			return $this->name;
-		}
-		
-		/**
-		 * Gets the lifetime of the cache.
-		 */
-		public function getLifetime(): int
-		{
-			return $this->lifetime;
 		}
 		
 		/**
