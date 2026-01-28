@@ -69,7 +69,7 @@
 		
 		/**
 		 * Searches for files in the file systems using a glob
-		 * pattern matching path.
+		 * pattern matching path. This does not guarantee sorted results (for performance).
 		 * @param string $globPattern
 		 * @return array
 		 */
