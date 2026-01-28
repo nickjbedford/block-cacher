@@ -8,17 +8,18 @@
 	namespace BlockCacher
 	{
 		use Exception;
+		use PHPUnit\Framework\Attributes\DataProvider;
 		use PHPUnit\Framework\TestCase;
 		
 		class BlockCacherTests extends TestCase
 		{
-			const RootCacheDirectory = __DIR__ . '/cache/';
+			const string RootCacheDirectory = __DIR__ . '/cache/';
 			
 			private array $cachers;
 			private BlockCacher $native;
 			private BlockCacher $mock;
 			
-			const CachePrefix = 'test-';
+			const string CachePrefix = 'test-';
 			
 			public static function cacherProvider(): array
 			{
@@ -43,6 +44,7 @@
 				$cacheDirectory = $this->cachers[0]->directory();
 				@rmdir($cacheDirectory);
 				@rmdir(self::RootCacheDirectory);
+				BlockCacher::resetDefault();
 				parent::tearDown();
 			}
 			
@@ -60,10 +62,10 @@
 			}
 			
 			/**
-			 * @dataProvider cacherProvider
 			 * @param int $i
 			 * @throws Exception
 			 */
+			#[DataProvider('cacherProvider')]
 			public function testGetAndStoreKey(int $i)
 			{
 				$cacher = $this->cachers[$i];
@@ -77,10 +79,10 @@
 			}
 			
 			/**
-			 * @dataProvider cacherProvider
 			 * @param int $i
 			 * @throws Exception
 			 */
+			#[DataProvider('cacherProvider')]
 			public function testKeyExists(int $i)
 			{
 				$cacher = $this->cachers[$i];
@@ -90,10 +92,10 @@
 			}
 			
 			/**
-			 * @dataProvider cacherProvider
 			 * @param int $i
 			 * @throws Exception
 			 */
+			#[DataProvider('cacherProvider')]
 			public function testStartAndEnd(int $i)
 			{
 				$cacher = $this->cachers[$i];
@@ -114,10 +116,10 @@
 			}
 			
 			/**
-			 * @dataProvider cacherProvider
 			 * @param int $i
 			 * @throws Exception
 			 */
+			#[DataProvider('cacherProvider')]
 			public function testClear(int $i)
 			{
 				$cacher = $this->cachers[$i];
@@ -138,10 +140,10 @@
 			}
 			
 			/**
-			 * @dataProvider cacherProvider
 			 * @param int $i
 			 * @throws Exception
 			 */
+			#[DataProvider('cacherProvider')]
 			public function testGenerate(int $i)
 			{
 				$cacher = $this->cachers[$i];
@@ -167,10 +169,10 @@
 			}
 			
 			/**
-			 * @dataProvider cacherProvider
 			 * @param int $i
 			 * @throws Exception
 			 */
+			#[DataProvider('cacherProvider')]
 			public function testGenerateText(int $i)
 			{
 				$cacher = $this->cachers[$i];
@@ -196,10 +198,10 @@
 			}
 			
 			/**
-			 * @dataProvider cacherProvider
 			 * @param int $i
 			 * @throws Exception
 			 */
+			#[DataProvider('cacherProvider')]
 			public function testGenerateHtml(int $i)
 			{
 				$cacher = $this->cachers[$i];

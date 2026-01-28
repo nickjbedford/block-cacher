@@ -11,15 +11,14 @@
 	 * This "block" cacher class provides the ability to generate and
 	 * store data efficiently using the file system alone. Reduce load
 	 * times to fractions of a millisecond by caching generated information.
-	 * Minimum PHP support is PHP 7.3.
 	 */
 	class BlockCacher
 	{
 		/** @var int Specifies the default lifetime for cache files of one day. */
-		const DefaultLifetime = 86400;
+		const int DefaultLifetime = 86400;
 		
 		/** @var int Specifies the default expiry time randomisation in seconds. */
-		const DefaultExpiryTimeRandomisation = 5;
+		const int DefaultExpiryTimeRandomisation = 5;
 		
 		/** @var BlockCacher|null $default Specifies the default cacher. */
 		private static ?BlockCacher $default = null;
@@ -76,7 +75,7 @@
 			if ($automaticallyEnsureStorageDirectoryExists)
 				$this->ensureStorageDirectoryExists();
 			
-			if (!self::$default)
+			if (self::$default === null)
 				$this->setAsDefault();
 			
 			$this->setExpiryTimeRandomisation(self::DefaultExpiryTimeRandomisation);
@@ -115,6 +114,14 @@
 		public static function default(): ?self
 		{
 			return self::$default;
+		}
+		
+		/**
+		 * Resets the default block cacher instance to null.
+		 */
+		public static function resetDefault(): void
+		{
+			self::$default = null;
 		}
 		
 		/**

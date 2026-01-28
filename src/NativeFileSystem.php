@@ -7,8 +7,10 @@
 	 */
 	class NativeFileSystem implements IFileSystem
 	{
-		const DirectoryPermissions = 0775;
-		const FilePermissions = 0664;
+		const int DirectoryPermissions = 0775;
+		const int FilePermissions = 0664;
+		
+		/** @var bool $applyFullPermissions If true, the umask will be reset to zero during any chmod() and mkdir() calls. */
 		private bool $applyFullPermissions;
 		
 		/** @var int $writeRetryCount Specifies the number of write attempts that will be taken on the file (in the case of file locking issues). */

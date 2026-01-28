@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="All Tests" type="PHPUnitRunConfigurationType" factoryName="PHPUnit">
-    <TestRunner class="BlockCacher\BlockCacherTests" file="$PROJECT_DIR$/tests/BlockCacher/BlockCacherTests.php" scope="Class" />
+    <TestRunner class="BlockCacher\BlockCacherTests" configuration_file="$PROJECT_DIR$/phpunit.xml" file="$PROJECT_DIR$/tests/BlockCacher/BlockCacherTests.php" scope="XML" />
     <method v="2" />
   </configuration>
 </component>
