@@ -24,7 +24,7 @@
         ]
     },
 	"require": {
-		"php": ">=8.4"
+		"php": "^8.4"
 	},
     "require-dev": {
         "phpunit/phpunit": "*"
