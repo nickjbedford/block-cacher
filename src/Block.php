@@ -14,20 +14,9 @@
 	 */
 	class Block
 	{
-		private BlockCacher $cacher
-		{
-			get => $this->cacher;
-		}
-		
-		private string $name
-		{
-			get => $this->name;
-		}
-		
-		private int $lifetime
-		{
-			get => $this->lifetime;
-		}
+		private(set) BlockCacher $cacher;
+		private(set) string $name;
+		private(set) int $lifetime;
 		
 		/**
 		 * Initializes a new caching block.
@@ -48,7 +37,7 @@
 		/**
 		 * Gets the name of the cache block.
 		 */
-		#[Deprecated('replace with property access')]
+		#[Deprecated('Replaced with $name field access')]
 		public function getName(): string
 		{
 			return $this->name;
