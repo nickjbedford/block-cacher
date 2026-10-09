@@ -15,7 +15,9 @@
 		{
 			const string RootCacheDirectory = __DIR__ . '/cache/';
 			
+			/** @var array<int, BlockCacher> $cachers */
 			private array $cachers;
+			
 			private BlockCacher $native;
 			private BlockCacher $mock;
 			
@@ -76,6 +78,7 @@
 				
 				$this->assertTrue($cacher->storeText('someKey', 'Hello, world!'));
 				$this->assertEquals('Hello, world!', $cacher->getText('someKey'));
+				$this->assertEquals(strlen('Hello, world!'), $cacher->storedSize('someKey'));
 			}
 			
 			/**

@@ -110,6 +110,16 @@
 		}
 		
 		/**
+		 * Gets the size of a cached value in bytes, or zero if the cache key does not exist.
+		 * This does not check the validity of the cache key, only its existence in the file system.
+		 * @return int
+		 */
+		public function storedSize(): int
+		{
+			return $this->cacher->storedSize($this->name);
+		}
+		
+		/**
 		 * Generates and caches data using a generator function only if the data is not yet cached.
 		 * @param callable|Closure $generator A callback that will generate the data if the cached data does not exist.
 		 * @return TData|null The generated data.

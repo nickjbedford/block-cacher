@@ -86,5 +86,11 @@
 						$found[] = $path;
 				return $found;
 			}
+			
+			function fileSize(string $path): int
+			{
+				return $this->pathExists($path) ?
+					strlen($this->files[$path]->contents) : 0;
+			}
 		}
 	}

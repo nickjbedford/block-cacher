@@ -74,4 +74,11 @@
 		 * @return array
 		 */
 		function searchFiles(string $globPattern): array;
+		
+		/**
+		 * Gets the size of a file in bytes. If the file does not exist, 0 should be returned.
+		 * @param string $path
+		 * @return int
+		 */
+		function fileSize(string $path): int;
 	}

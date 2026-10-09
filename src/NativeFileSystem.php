@@ -151,4 +151,12 @@
 		{
 			return glob($globPattern, GLOB_NOSORT);
 		}
+		
+		/**
+		 * @inheritDoc
+		 */
+		public function fileSize(string $path): int
+		{
+			return !file_exists($path) ? 0 : (filesize($path) ?: 0);
+		}
 	}

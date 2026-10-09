@@ -368,6 +368,21 @@
 		}
 		
 		/**
+		 * Gets the size of a cached value in bytes, or zero if the cache key does not exist.
+		 * This does not check the validity of the cache key, only its existence in the file system.
+		 * @param string $key
+		 * @param bool $prefixed
+		 * @return int
+		 */
+		public function storedSize(string $key, bool $prefixed = true): int
+		{
+			$filepath = $this->filepath($key, $prefixed);
+			if (!$this->fileSystem->pathExists($filepath))
+				return 0;
+			return $this->fileSystem->fileSize($filepath);
+		}
+		
+		/**
 		 * Stores a value in the file cache. The value must be serializable
 		 * using the native serialize() function.
 		 * @param string $key The key for the cached value.
